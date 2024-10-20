@@ -1,0 +1,17 @@
+package components
+
+templ IndexTemplate(allOptions AllOptions) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Htmx Testing</title>
+			<link rel="stylesheet" href="styles.css"/>
+		</head>
+		<body class="flex flex-col items-center bg-blue-100">
+			@FormTemplate(allOptions)
+			<script src="https://unpkg.com/htmx.org@2.0.3"></script>
+		</body>
+	</html>
+}

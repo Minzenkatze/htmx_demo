@@ -1,0 +1,38 @@
+package components
+
+type AllOptions struct {
+	Species []string
+	Type    []string
+}
+
+type Filter struct {
+	Species string
+	Type    string
+	Name    string
+}
+
+templ FormTemplate(allOptions AllOptions) {
+	<form
+		hx-get="/filter"
+		hx-target=".group-container"
+		class="flex flex-row justify-center max-w-xl m-2 w-full"
+		hx-trigger="load, input delay:500ms from:input, change from:select"
+		onkeydown="if(event.key === 'Enter') {return false; }"
+	>
+		@SelectionTemplate("species", allOptions.Species)
+		@SelectionTemplate("type", allOptions.Type)
+		<input type="text" name="name" class="p-3.5 my-2.5" placeholder="Name"/>
+	</form>
+	<div class="bg-green-200 group-container flex justify-center flex-col rounded-md"></div>
+}
+
+templ SelectionTemplate(name string, options []string) {
+	<select
+		class="w-full p-3.5 my-2.5 border border-gray-300 rounded box-border m-2"
+		name={ name }
+	>
+		for _, option := range options {
+			<option value={ option }>{ option }</option>
+		}
+	</select>
+}

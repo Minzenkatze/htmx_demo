@@ -1,0 +1,39 @@
+package components 
+
+import "strconv"
+
+type Profile struct {
+	Name       string
+	PictureUrl string
+	Age        int
+}
+
+var profileExpansionHandler = templ.NewOnceHandle()
+
+templ GroupTemplate(profiles []Profile) {
+	<div class="flex flex-wrap justify-center items-start flex-row">
+		for _, profile := range profiles {
+			@ProfileTemplate(profile)
+		}
+	</div>
+}
+
+templ ProfileTemplate(profile Profile) {
+	<div class="flex group relative justify-center flex-col items-center mx-8" onclick="toggleVisibility(event)">
+		<img src={ profile.PictureUrl } class="m-2 rounded-full border border-green-500 transition-transform duration-300 ease-in-out group-hover:scale-110" alt={ profile.Name } height="200px" width="200px"/>
+		<p class="group-hover:underline">{ profile.Name }</p>
+		<div class="profile__dropdown top-full hidden absolute left-0 h-12 w-full bg-green-200 rounded-b-md items-center justify-center">
+			<span class="flex justify-center items-center h-full">Age: { strconv.Itoa(profile.Age) }</span>
+		</div>
+	</div>
+	@profileExpansionHandler.Once() {
+		<script type="text/javascript">
+  function toggleVisibility(event) {
+    let hiddenDiv = event.currentTarget.querySelector('.profile__dropdown');
+    if (hiddenDiv) {
+    hiddenDiv.classList.toggle('hidden');
+    }
+  }
+  </script>
+	}
+}
