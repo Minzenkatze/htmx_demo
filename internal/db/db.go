@@ -8,31 +8,51 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var DB *sql.DB
+type DB interface {
+	// initDB initializes the database
+	initDB() error
+	// QueryOptions returns all the options available in the database
+	QueryOptions() (components.AllOptions, error)
+	// QueryFiltered returns a list of profiles that match the filter
+	QueryFiltered(filter components.Filter) ([]components.Profile, error)
+}
 
-func InitDB() error {
+type SqliteDB struct {
+	Db *sql.DB
+}
+
+// Create a new SqliteDB instance and initialize the database
+func NewSqliteDB() (*SqliteDB, error) {
+	db := &SqliteDB{}
+	if err := db.initDB(); err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+
+func (s *SqliteDB) initDB() error {
 	var err error
-	DB, err = sql.Open("sqlite3", "demo.db")
+	s.Db, err = sql.Open("sqlite3", "demo.db")
 	if err != nil {
 		return err
 	}
-	if err := DB.Ping(); err != nil {
+	if err := s.Db.Ping(); err != nil {
 		return err
 	}
 	log.Println("Connected to the database")
 	// Copy database into memory
-	if _, err := DB.Exec(`ATTACH DATABASE ':memory:' AS memdb;`); err != nil {
+	if _, err := s.Db.Exec(`ATTACH DATABASE ':memory:' AS memdb;`); err != nil {
 		return err
 	}
-	if _, err := DB.Exec(`CREATE TABLE memdb.subjects AS SELECT * FROM subjects;`); err != nil {
+	if _, err := s.Db.Exec(`CREATE TABLE memdb.subjects AS SELECT * FROM subjects;`); err != nil {
 		return err
 	}
 	return nil
 }
 
-func QueryOptions() (components.AllOptions, error) {
+func (s *SqliteDB) QueryOptions() (components.AllOptions, error) {
 	var allOptions components.AllOptions
-	species_rows, err := DB.Query(`SELECT DISTINCT species FROM memdb.subjects;`)
+	species_rows, err := s.Db.Query(`SELECT DISTINCT species FROM memdb.subjects;`)
 	if err != nil {
 		log.Println(err)
 		return allOptions, err
@@ -45,7 +65,7 @@ func QueryOptions() (components.AllOptions, error) {
 		}
 		allOptions.Species = append(allOptions.Species, species)
 	}
-	type_rows, err := DB.Query(`SELECT DISTINCT type FROM memdb.subjects;`)
+	type_rows, err := s.Db.Query(`SELECT DISTINCT type FROM memdb.subjects;`)
 	if err != nil {
 		return allOptions, err
 	}
@@ -59,9 +79,9 @@ func QueryOptions() (components.AllOptions, error) {
 	return allOptions, nil
 }
 
-func QueryFiltered(filter components.Filter) ([]components.Profile, error) {
+func (s *SqliteDB) QueryFiltered(filter components.Filter) ([]components.Profile, error) {
 	var profiles []components.Profile
-	rows, err := DB.Query(`SELECT name, picture_url, age FROM memdb.subjects WHERE species = ? AND type = ? AND UPPER(name) LIKE '%' || UPPER(?) || '%'`, filter.Species, filter.Type, filter.Name)
+	rows, err := s.Db.Query(`SELECT name, picture_url, age FROM memdb.subjects WHERE species = ? AND type = ? AND UPPER(name) LIKE '%' || UPPER(?) || '%'`, filter.Species, filter.Type, filter.Name)
 	if err != nil {
 		return profiles, err
 	}

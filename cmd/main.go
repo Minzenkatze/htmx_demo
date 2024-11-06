@@ -13,15 +13,19 @@ func main() {
 	r.SetTrustedProxies(nil)
 	r.Static("/static", "./static")
 	r.StaticFile("/styles.css", "./internal/assets/dist/styles.css")
-	err := db.InitDB()
+	db, err := db.NewSqliteDB()
 	defer func() {
-		if db.DB != nil {
-			db.DB.Close()
+		if db.Db != nil {
+			db.Db.Close()
 		}
 	}()
 	if err != nil {
 		log.Fatal(err)
 	}
-	handlers.SetupRoutes(r)
+	handlers := &handlers.Handlers{
+		Db:     db,
+		Router: r,
+	}
+	handlers.SetupRoutes()
 	r.Run(":8080")
 }

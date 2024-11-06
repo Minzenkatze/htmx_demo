@@ -9,8 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func renderIndex(c *gin.Context) {
-	result, err := db.QueryOptions()
+type Handlers struct {
+	Db     db.DB
+	Router *gin.Engine
+}
+
+func (h *Handlers) renderIndex(c *gin.Context) {
+	result, err := h.Db.QueryOptions()
 	if err != nil {
 		log.Println(err)
 		c.String(http.StatusInternalServerError, "Error querying the database")
@@ -19,13 +24,13 @@ func renderIndex(c *gin.Context) {
 	components.IndexTemplate(result).Render(c, c.Writer)
 }
 
-func filter(c *gin.Context) {
+func (h *Handlers) filter(c *gin.Context) {
 	filter := components.Filter{
 		Species: c.Query("species"),
 		Type:    c.Query("type"),
 		Name:    c.Query("name"),
 	}
-	results, err := db.QueryFiltered(filter)
+	results, err := h.Db.QueryFiltered(filter)
 	if err != nil {
 		log.Println(err)
 		c.String(http.StatusInternalServerError, "Error querying the database")
@@ -34,7 +39,7 @@ func filter(c *gin.Context) {
 	components.GroupTemplate(results).Render(c, c.Writer)
 }
 
-func SetupRoutes(r *gin.Engine) {
-	r.GET("/", renderIndex)
-	r.GET("/filter", filter)
+func (h *Handlers) SetupRoutes() {
+	h.Router.GET("/", h.renderIndex)
+	h.Router.GET("/filter", h.filter)
 }
