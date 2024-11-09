@@ -9,8 +9,6 @@ import (
 )
 
 type DB interface {
-	// initDB initializes the database
-	initDB() error
 	// QueryOptions returns all the options available in the database
 	QueryOptions() (components.AllOptions, error)
 	// QueryFiltered returns a list of profiles that match the filter
